@@ -1,7 +1,9 @@
-const asyncHandler = (fn) => {
-  (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch((err) => next(err));
-  };
+//we write this wrwpper so that we can just use this instead of wrutun this everytime
+const asyncHandler = (requestHandler) => {
+    return (req, res, next) => {
+        Promise.resolve(requestHandler(req, res, next))
+        .catch((err) => next(err));
+    };
 };
 
 // const asyncHandler= (fn)=>async(req,res,next)=>{
