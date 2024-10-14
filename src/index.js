@@ -13,6 +13,9 @@ connectDB().then(()=>{
         throw err;
     })
     //app.listen() , takes the port and returns a callback function
+    
+    //The listen method starts the server, which accepts incoming requests on the specified port.
+    // So the actual "call" to the app happens when you invoke app.listen.
     app.listen(process.env.PORT || 8000,()=>{
         console.log(`servfer is running at post : ${process.env.PORT}`);
     })

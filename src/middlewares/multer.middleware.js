@@ -10,5 +10,5 @@ const storage = multer.diskStorage({
         // change this original name to something filename+uniquesuffix
     },
 });
-
+// no need to write next() as multer handels next() itself  
 export const upload = multer({ storage });

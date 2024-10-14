@@ -11,13 +11,18 @@ cloudinary.config({
 // Upload an image
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        await cloudinary.uploader.upload(localFilePath, {
-            resource_type: auto,
+        if (!localFilePath) return null;
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto",
         });
-        console.log("file is uploaded on cloudinary", response.url);
+        //console.log("file is uploaded on cloudinary", response.url);
+        fs.unlinkSync(localFilePath)
+        // we use unlinkSync instead of unlink bcs , we want to go ahead only when it is done
         return response;
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the file locally saved temporary file as the upload fialed why ??
+        console.log("error in upload on cloudinary", "with file:",localFilePath);
+        
+        fs.unlinkSync(localFilePath)
         console.log(error);
         return null;
     }

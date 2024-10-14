@@ -1,5 +1,8 @@
-//we write this wrwpper so that we can just use this instead of wrutun this everytime
+//we write this wrapper so that we can just use this instead of writing this everytime
+// use to make promise call (asyncnanous calls)
+// USE ONLY WHERE MAKING WEB REQUEST 
 const asyncHandler = (requestHandler) => {
+    //here the req,res,next are called form inside teh function 
     return (req, res, next) => {
         Promise.resolve(requestHandler(req, res, next))
         .catch((err) => next(err));
