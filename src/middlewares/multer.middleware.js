@@ -12,3 +12,5 @@ const storage = multer.diskStorage({
 });
 // no need to write next() as multer handels next() itself  
 export const upload = multer({ storage });
+
+// WITH THIS WE ARE ABLE TO ACCESS req.file or req.files   in controller

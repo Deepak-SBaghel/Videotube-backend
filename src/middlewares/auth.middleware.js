@@ -2,6 +2,8 @@
 // instead of returning user , we are adding user in req body
 // then pass to next middleware with next
 
+
+// can also be used to check if the user is checkrd in or not
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
@@ -35,3 +37,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         // this can be 501
     }
 });
+
+
+// WITH THIS WE CAN ACCESS req,user 
+// and also varify that the user us logined 
