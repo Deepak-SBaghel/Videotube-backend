@@ -59,14 +59,14 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         // this method genetares token
         {
-            id: this._id,
+            _id: this._id,
             email: this.email,
             username: this.username,
             fullname: this.fullname,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn:process.env.ACCESS_TOKEN_EXPIARY
+            expiresIn:process.env.ACCESS_TOKEN_EXPIRY
         }
     );
 
@@ -76,15 +76,12 @@ userSchema.methods.generateRefreshToken = function () {
         // this method genetares token
         {
             // we can access all this from the token (which is saved in cookiess)
-            id: this._id,
-            email: this.email,
-            username: this.username,
-            fullname: this.fullname,
+            _id: this._id,
         },
         // we will need this secret to verify token,(in auth middleware)
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn:process.env.REFRESH_TOKEN_EXPIARY
+            expiresIn:process.env.REFRESH_TOKEN_EXPIRY
         }
     );
 

@@ -3,12 +3,13 @@
 // then pass to next middleware with next
 
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-export const verifyJWT = asyncHandler(async (req, _, next) => {
+import jwt from "jsonwebtoken"
+export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
         const token =
-            req.cookie?.accessToken ||
+            req.cookies?.accessToken ||
             req.header("Authrization")?.replace("Bearer ", "");
         // the user mignt call with header call , so we handel that to
 
@@ -17,8 +18,10 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         }
 
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        console.log("decodedtoken",decodedToken);
+        
 
-        const user = await User.findById(decodedToken?._id).remove("-password -refreshToken");
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
 
         if (!user) {
             throw new ApiError(401, "invalid Access TOken");
