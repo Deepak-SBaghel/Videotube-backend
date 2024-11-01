@@ -18,6 +18,18 @@ const videoSchema = new Schema(
             type: String, //cloudinary url
             required: true,
         },
+        duration:{
+            type:Number,
+            default:0,
+        },
+        view:{
+            type:Number,
+            required:0
+        },
+        isPublished:{
+            type:Boolean,
+            default:true
+        },
         owner: {
             type: Schema.Types.ObjectId,
             ref: "User",
