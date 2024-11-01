@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 // import { cookie } from "cookie-parser";
 // u csn use cookie-parser directry as imported in app.use()
 
@@ -428,7 +429,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                     $size: "$subscribers",
                 },
                 channelsSubscribedToCount: {
-                    $size: "$subscribedTo ",
+                    $size: "$subscribedTo",
                 },
                 isSubscribed: {
                     $cond: {

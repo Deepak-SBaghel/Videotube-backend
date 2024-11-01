@@ -36,7 +36,7 @@ router.route("/register").post(
 router.route("/login").post(logRequestBody, loginUser);
 
 // secured route (user should be logined to access this )
-router.route("/logout  ").post(verifyJWT, logoutUser);
+router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 router.route("/current-user").post(verifyJWT, getCurrentUser);
@@ -51,7 +51,7 @@ router
 router
     .route("/channel-profile/:username")
     .get(verifyJWT, getUserChannelProfile);
-router.route("/watch-history").post(verifyJWT, getWatchHistory);
+router.route("/watch-history").get(verifyJWT, getWatchHistory);
 export default router;
 
 // dafault keyword is used to export a single variable
