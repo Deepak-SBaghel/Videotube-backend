@@ -141,6 +141,36 @@ export const togglePublishStatus = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, video, "Publish status updated"));
 });
+export const searchVideos = asyncHandler(async (req, res) => {
+    const { query } = req.query;
+    if (!query) {
+        return res.status(400).json({ message: "Query is required" });
+    }
+
+    const videos = await Video.find({
+        $or: [
+            { title: { $regex: query, $options: "i" } },
+            { description: { $regex: query, $options: "i" } },
+        ],
+    }).populate("owner", "username email");
+
+    res.status(200).json({ count: videos.length, videos });
+});
+
+export const sortVideos = asyncHandler(async (req, res) => {
+    const { by } = req.query;
+
+    let sortOption = {};
+    if (by === "newest") sortOption = { createdAt: -1 };
+    else if (by === "oldest") sortOption = { createdAt: 1 };
+    else if (by === "popular") sortOption = { views: -1 }; // Assuming you store views
+
+    const videos = await Video.find()
+        .populate("owner", "username email")
+        .sort(sortOption);
+
+    res.status(200).json({ count: videos.length, videos });
+});
 
 
 

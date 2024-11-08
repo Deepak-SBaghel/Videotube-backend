@@ -17,5 +17,7 @@ router.get("/", getAllVideos);
 router.get("/:id", getVideoById);
 router.put("/:id", verifyJWT, updateVideo);
 router.delete("/:id", verifyJWT, deleteVideo);
+router.get("/search", searchVideos);
+router.get("/sort", sortVideos);
 
 export default router;
