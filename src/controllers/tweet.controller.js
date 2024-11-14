@@ -97,6 +97,31 @@ export const deleteTweet = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, {}, "Tweet deleted successfully"));
 });
+export const searchTweets = asyncHandler(async (req, res) => {
+    const { query } = req.query;
+    if (!query) {
+        return res.status(400).json({ message: "Query is required" });
+    }
 
+    const tweets = await Tweet.find({
+        content: { $regex: query, $options: "i" },
+    }).populate("owner", "username email");
+
+    res.status(200).json({ count: tweets.length, tweets });
+});
+export const sortTweets = asyncHandler(async (req, res) => {
+    const { by } = req.query;
+
+    let sortOption = {};
+    if (by === "newest") sortOption = { createdAt: -1 };
+    else if (by === "oldest") sortOption = { createdAt: 1 };
+    else if (by === "popular") sortOption = { likesCount: -1 }; // Assuming you count likes somewhere
+
+    const tweets = await Tweet.find()
+        .populate("owner", "username email")
+        .sort(sortOption);
+
+    res.status(200).json({ count: tweets.length, tweets });
+});
 
 

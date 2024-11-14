@@ -18,5 +18,6 @@ router.get("/", getAllTweets);
 router.get("/:id", getTweetById);
 router.put("/:id", verifyJWT, updateTweet);
 router.delete("/:id", verifyJWT, deleteTweet);
-
+router.get("/search", searchTweets);
+router.get("/sort", sortTweets);// Example: GET /api/tweets/sort?by=newest
 export default router;
