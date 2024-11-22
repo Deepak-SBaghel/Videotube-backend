@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { buildCookieOptions } from "../utils/cookieOptions.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 // import { cookie } from "cookie-parser";
@@ -145,56 +146,34 @@ const loginUser = asyncHandler(async (req, res) => {
     // make a program so that , refresh token req for new access token once expired
 
     const { username, email, password } = req.body;
-    console.log("the req.body is", req.body);
-    console.log("the email is", email);
+    if (!username && !email)
+        throw new ApiError(400, "Username or email is required");
 
-    if (!username && !email) {
-        console.log("please enter username or email input");
-        throw new ApiError(401, "all fields are required");
-    }
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (!existingUser) throw new ApiError(400, "User does not exist");
 
-    const existingUser = await User.findOne({
-        $or: [{ username }, { email }],
-    });
+    const ok = await existingUser.isPasswordCorrect(password);
+    if (!ok) throw new ApiError(400, "Incorrect password");
 
-    if (!existingUser) {
-        console.log("user Does not exist");
-        throw new ApiError(400, "user does not exist");
-    }
+    const accessToken = existingUser.generateAccessToken();
+    const refreshToken = existingUser.generateRefreshToken();
 
-    const checkPassword = await existingUser.isPasswordCorrect(password);
-    // no need of existingUser.methods.isPasswordCorrect  X X X
-    if (!checkPassword) {
-        console.log("incorrect password");
-        throw new ApiError(400, "incorrect password");
-    }
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-        existingUser._id
-    );
+    existingUser.refreshToken = refreshToken;
+    await existingUser.save({ validateBeforeSave: false });
 
-    // the aT and rT are not in the existingUser so we call again
     const loggedInUser = await User.findById(existingUser._id).select(
         "-password -refreshToken"
     );
 
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, buildCookieOptions("access"))
+        .cookie("refreshToken", refreshToken, buildCookieOptions("refresh"))
         .json(
             new ApiResponse(
                 200,
-                {
-                    user: loggedInUser,
-                    accessToken,
-                    refreshToken,
-                    //this is only shower to user not stored in database
-                },
-                "User logged in sucessfully"
+                { user: loggedInUser },
+                "User logged in successfully"
             )
         );
 });
@@ -204,70 +183,59 @@ const logoutUser = asyncHandler(async (req, res) => {
     // renew refresh token
     await User.findByIdAndUpdate(
         req.user._id,
-        {
-            $unset: { refreshToken: 1 },
-        },
-        {
-            new: true,
-        }
+        { $unset: { refreshToken: 1 } },
+        { new: true }
     );
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
+
+    const accessOpts = buildCookieOptions("access");
+    const refreshOpts = buildCookieOptions("refresh");
+
     return res
         .status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged Out Sucessfully"));
+        .clearCookie("accessToken", accessOpts)
+        .clearCookie("refreshToken", refreshOpts)
+        .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
-const refreshAccessToken = asyncHandler(async (req, res, next) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken =
-        req.cookies?.refreshToken || req.bod.refreshToken;
+        req.cookies?.refreshToken || req.body?.refreshToken;
+    if (!incomingRefreshToken)
+        throw new ApiError(401, "Unauthorized: no refresh token");
 
-    if (!incomingRefreshToken) {
-        throw new ApiError(401, " Unauthorized request");
-    }
-
+    let decoded;
     try {
-        const decodedRefreshToken = jwt.verify(
+        decoded = jwt.verify(
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         );
-
-        const user = await User.findById(decodedRefreshToken?._id);
-        console.log("user from decoded refresh token is ", user);
-
-        if (!user) {
-            throw new ApiError(401, " Invelid refresh Token");
-        }
-
-        if (incomingRefreshToken !== user.refreshToken) {
-            throw new ApiError(401, " refresh token is expired or not used");
-        }
-        // new take new acces token from the generate access toekn
-
-        const options = {
-            httpOnly: true,
-            secure: true,
-        };
-
-        const { accessToken } = await generateAccessToken_endPoint(user._id);
-        return res
-            .status(200)
-            .cookie("accessToken", accessToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    { accessToken },
-                    "access token is refreshed"
-                )
-            );
-    } catch (error) {
-        throw new ApiError(401, error?.message || "invalid access token");
+    } catch (err) {
+        throw new ApiError(401, "Invalid or expired refresh token");
     }
+
+    const user = await User.findById(decoded?._id);
+    if (!user) throw new ApiError(401, "User not found for refresh token");
+
+    // Token reuse/rotation check
+    if (user.refreshToken !== incomingRefreshToken) {
+        // Optional: revoke all sessions here
+        user.refreshToken = undefined;
+        await user.save({ validateBeforeSave: false });
+        throw new ApiError(401, "Refresh token reuse detected");
+    }
+
+    // Mint new pair (rotate refresh)
+    const accessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+    user.refreshToken = newRefreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200)
+        .cookie("accessToken", accessToken, buildCookieOptions("access"))
+        .cookie("refreshToken", newRefreshToken, buildCookieOptions("refresh"))
+        .json(new ApiResponse(200, { ok: true }, "Access token refreshed"));
 });
+
 // we will get the current user from ,auth.middleware
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
@@ -502,7 +470,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                         $addFields: {
                             owner: {
                                 $first: "$owner",
-                            }, 
+                            },
                             // owner is a field now
                             // create a object of owner rather than arr[0]
                         },
@@ -510,10 +478,9 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 ],
             },
         },
-
     ]);
     // user = [{a,b,watchHIstory}]
-    return res.status(200).json(new ApiResponse(200,user[0].watchHistory))
+    return res.status(200).json(new ApiResponse(200, user[0].watchHistory));
 });
 //Note : make seperate contoller to change the files
 export {
