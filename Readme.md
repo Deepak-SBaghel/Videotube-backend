@@ -1,12 +1,13 @@
+
 # Videotube Backend
 
-> **A modular, scalable Node.js/Express API for video sharing (In progress: Twitter-style feeds & advanced video features).**
+> **A modular, scalable Node.js/Express API for video sharing with social-feed and advanced video features.**
 
 ---
 
 ## 🚀 Overview
 
-Videotube-backend powers user authentication, profile management, video uploads, and watch history for a learning-focused video platform. Built with modern best practices and easily extensible for social-feed (Twitter-like) and video enhancements.
+Videotube-backend powers user authentication, profile management, video & tweet uploads, likes, comments, and watch history for a learning-focused video platform. Built with modern best practices, it’s easily extensible for Twitter-style feeds, video streaming, and more.
 
 ---
 
@@ -14,96 +15,110 @@ Videotube-backend powers user authentication, profile management, video uploads,
 
 - **Node.js** & **Express**  
 - **MongoDB** via **Mongoose**  
-- **JWT** (access + refresh tokens) for auth  
+- **JWT** (access + refresh tokens) for authentication  
 - **Cloudinary** for media storage  
 - **Multer** for file uploads  
-- **dotenv** for configuration  
+- **Redis** for caching (seat reservation/payment projects)  
+- **dotenv** for environment configuration  
 - **cors**, **cookie-parser** for security & cookies
 
 ---
 
 ## ✨ Key Features
 
-1. **User Management**  
-   - Registration w/ avatar & cover-image upload  
-   - Login / Logout / Token refresh  
-   - Password change, profile update  
-2. **Media Handling**  
-   - Upload video files + thumbnails to Cloudinary  
-   - Automatic temp-file cleanup  
-3. **Profiles & Channels**  
-   - Public channel pages with subscriber counts  
-   - Watch-history aggregation pipeline  
-4. **Pluggable Modules**  
-   - Twitter-style feed (ongoing)  
-   - Advanced video streaming (ongoing)
+### 1. User Management
+- Registration with avatar & optional cover-image upload  
+- Login / Logout / Token refresh  
+- Password change, profile update  
+- Fetch current user info  
+
+### 2. Media & Content
+- Upload videos, tweets, avatars, and cover images  
+- Multer handles temporary file storage before Cloudinary upload  
+- Automatic cleanup of temp files  
+
+### 3. Social Features
+- Public channel pages with subscriber counts  
+- Toggle likes for videos, tweets, and comments  
+- Watch-history aggregation for personalized recommendations  
+
+### 4. Pluggable Modules
+- Twitter-style feed (ongoing)  
+- Advanced video streaming (ongoing)  
 
 ---
 
 ## 🛠️ Getting Started
 
-1. **Clone & install**  
-   ```bash
-   git clone https://github.com/your-username/videotube-backend.git
-   cd videotube-backend
-   npm install
-Configure
+1. **Clone & Install**
+```bash
+git clone https://github.com/your-username/videotube-backend.git
+cd videotube-backend
+npm install
+```
 
-Copy env.example → .env
+2. **Configure Environment**
+```bash
+cp .env.example .env
+```
+Set:
+- `MONGODB_URI`
+- `PORT`
+- `ACCESS_TOKEN_SECRET`
+- `REFRESH_TOKEN_SECRET`
+- Cloudinary keys
+- CORS origin
 
-Set MONGODB_URI, PORT, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, Cloudinary keys, CORS origin.
-
-Run in dev
-
-bash
-Copy
-Edit
+3. **Run in Development**
+```bash
 npm run dev
-API base URL
+```
 
-bash
-Copy
-Edit
-http://localhost:<PORT>/api/v1/users
-## API Endpoints
-Authentication
-POST /register — Sign up (avatar + cover image)
+API Base URL:  
+```
+http://localhost:<PORT>/api/v1
+```
 
-POST /login — Sign in
+---
 
-POST /logout — Sign out
+## 📡 API Endpoints
 
-POST /refresh-token — Renew access token
+### Authentication
+- `POST /users/register` — Sign up (avatar + cover image)  
+- `POST /users/login` — Sign in  
+- `POST /users/logout` — Sign out  
+- `POST /users/refresh-token` — Renew access token  
 
-User Profile
-POST /current-user — Get logged-in user
+### User Profile
+- `GET /users/current-user` — Get logged-in user  
+- `PATCH /users/update-account` — Update name/email  
+- `POST /users/change-password` — Change password  
+- `POST /users/avatar` — Update avatar image  
+- `POST /users/cover-image` — Update cover image  
 
-PATCH /update-account — Update name/email
+### Channels & History
+- `GET /users/channel-profile/:username` — Public channel data  
+- `GET /users/watch-history` — User’s watched videos  
 
-POST /change-password — Change password
+### Social Interactions
+- `POST /likes/video/:videoId` — Toggle video like  
+- `POST /likes/tweet/:tweetId` — Toggle tweet like  
+- `POST /likes/comment/:commentId` — Toggle comment like  
+- `GET /likes/videos` — Fetch liked videos  
 
-POST /avatar — Update avatar image
-
-POST /cover-image — Update cover image
-
-Channels & History
-GET /channel-profile/:username — Public channel data
-
-GET /watch-history — User’s watched videos
+---
 
 ## Contributing
-Fork and branch:
 
-bash
-Copy
-Edit
+Fork the repo and branch:
+```bash
 git checkout -b feature/awesome-module
-Commit your changes
+```
+Commit your changes and open a Pull Request.  
+Follow existing code style and add tests where applicable.
 
-Open a Pull Request
-
-Please follow the existing code style and add tests where applicable.
+---
 
 ## License
-This project is released under the ISC License.
 
+Released under the ISC License.
